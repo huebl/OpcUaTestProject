@@ -1,5 +1,5 @@
 /*
-   Copyright 2015-2020 Kai Huebl (kai@huebl-sgh.de)
+   Copyright 2015-2022 Kai Huebl (kai@huebl-sgh.de)
 
    Lizenziert gemäß Apache Licence Version 2.0 (die „Lizenz“); Nutzung dieser
    Datei nur in Übereinstimmung mit der Lizenz erlaubt.
@@ -18,7 +18,9 @@
 #ifndef __TestProject_Library_h__
 #define __TestProject_Library_h__
 
+#include "OpcUaStackCore/BuildInTypes/OpcUaStatusCode.h"
 #include "OpcUaStackServer/Application/ApplicationIf.h"
+#include "OpcUaStackServer/AddressSpaceModel/BaseNodeClass.h"
 
 namespace TestProject
 {
@@ -30,6 +32,8 @@ namespace TestProject
 		Library(void);
 		virtual ~Library(void);
 
+		using WriteCallback = std::function<void (OpcUaStackCore::ApplicationWriteContext* applicationWriteContext)>;
+
 		//- ApplicationIf -----------------------------------------------------
 		bool startup(void) override;
 		bool shutdown(void) override;
@@ -38,7 +42,44 @@ namespace TestProject
 		std::string gitBranch(void) override;
 		//- ApplicationIf -----------------------------------------------------
 
+		void writeCallbackProductionStart(
+			OpcUaStackCore::ApplicationWriteContext* applicationWriteContext
+		);
+
+
+		bool getNamespaceInfo(
+			const std::string namespaceName,
+			uint32_t& namespaceIndex
+		);
+		bool readNodeReference(
+			const OpcUaStackCore::OpcUaNodeId& nodeId,
+			OpcUaStackServer::BaseNodeClass::WPtr& baseNode
+		);
+		bool setValue(
+			const OpcUaStackCore::OpcUaNodeId& nodeId,
+			OpcUaStackServer::BaseNodeClass::WPtr& baseNode,
+			OpcUaStackCore::OpcUaBoolean value
+		);
+		OpcUaStackCore::OpcUaStatusCode getValue(
+			const OpcUaStackCore::OpcUaNodeId& nodeId,
+			OpcUaStackServer::BaseNodeClass::WPtr& baseNode,
+			OpcUaStackCore::OpcUaBoolean& value
+		);
+		bool registerWriteCallback(
+			const OpcUaStackCore::OpcUaNodeId& nodeId,
+			WriteCallback writeCallback
+		);
+
 	  private:
+		uint32_t serverNamespace_ = 0;
+
+		OpcUaStackCore::OpcUaNodeId productionStartNodeId_;
+		OpcUaStackCore::OpcUaNodeId partsAvailableNodeId_;
+		OpcUaStackCore::OpcUaNodeId resultsAvailableNodeId_;
+
+		OpcUaStackServer::BaseNodeClass::WPtr productionStartNode_;
+		OpcUaStackServer::BaseNodeClass::WPtr  partsAvailableNode_;
+		OpcUaStackServer::BaseNodeClass::WPtr  resultsAvailableNode_;
 	};
 
 }
