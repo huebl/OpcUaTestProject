@@ -58,7 +58,8 @@ namespace TestProject
 		bool setValue(
 			const OpcUaStackCore::OpcUaNodeId& nodeId,
 			OpcUaStackServer::BaseNodeClass::WPtr& baseNode,
-			OpcUaStackCore::OpcUaBoolean value
+			OpcUaStackCore::OpcUaBoolean value,
+			OpcUaStackCore::OpcUaStatusCode statusCode = OpcUaStackCore::Success
 		);
 		OpcUaStackCore::OpcUaStatusCode getValue(
 			const OpcUaStackCore::OpcUaNodeId& nodeId,

@@ -53,12 +53,12 @@ namespace TestProject
 		partsAvailableNodeId_.set((uint32_t)293, serverNamespace_);
 		resultsAvailableNodeId_.set((uint32_t)285, serverNamespace_);
 
-		// get references to nodes in opc ua information model
+		// get references to nodes in the opc ua information model
 		if (!readNodeReference(productionStartNodeId_, productionStartNode_)) return false;
 		if (!readNodeReference(partsAvailableNodeId_, partsAvailableNode_)) return false;
 		if (!readNodeReference(resultsAvailableNodeId_, resultsAvailableNode_)) return false;
 
-		// set default values after information model startup
+		// set default values after information model during startup
 		if (!setValue(productionStartNodeId_, productionStartNode_, false)) return false;
 		if (!setValue(partsAvailableNodeId_, partsAvailableNode_, true)) return false;
 		if (!setValue(resultsAvailableNodeId_, resultsAvailableNode_, true)) return false;
@@ -102,16 +102,18 @@ namespace TestProject
 		ApplicationWriteContext* applicationWriteContext
 	)
 	{
+		OpcUaStatusCode statusCode;
 		OpcUaBoolean value;
 
 		// get a value
-		getValue(partsAvailableNodeId_, partsAvailableNode_, value);
+		statusCode = getValue(partsAvailableNodeId_, partsAvailableNode_, value);
 
 		// set a value
-		setValue(resultsAvailableNodeId_, resultsAvailableNode_, value);
+		setValue(resultsAvailableNodeId_, resultsAvailableNode_, value, statusCode);
+
 
 		// set production call value
-		//setValue(productionStartNodeId_, productionStartNode_, false);
+		applicationWriteContext->dataValue_.set((OpcUaBoolean)false);
 	}
 
 	bool
@@ -172,7 +174,8 @@ namespace TestProject
 	Library::setValue(
 		const OpcUaNodeId& nodeId,
 		BaseNodeClass::WPtr& baseNode,
-		OpcUaBoolean value
+		OpcUaBoolean value,
+		OpcUaStackCore::OpcUaStatusCode statusCode
 	)
 	{
   		auto baseNodeClass = baseNode.lock();
@@ -182,14 +185,12 @@ namespace TestProject
   			return false;
   		}
 
-		OpcUaDateTime dateTime(boost::posix_time::microsec_clock::universal_time());
-
-		OpcUaDataValue dataValue;
-		dataValue.serverTimestamp(dateTime);
-		dataValue.sourceTimestamp(dateTime);
-		dataValue.setValue(value);
-		dataValue.statusCode(Success);
-		baseNodeClass->setValueSync(dataValue);
+  		if (statusCode == Success) {
+  			baseNodeClass->setValueSync(OpcUaDataValue((OpcUaBoolean)value, statusCode));
+  		}
+  		else {
+  			baseNodeClass->setValueSync(OpcUaDataValue(OpcUaNullValue(), statusCode));
+  		}
 
 		return true;
 	}
@@ -211,7 +212,7 @@ namespace TestProject
   		OpcUaDataValue dataValue;
   		baseNodeClass->getValueSync(dataValue);
 
-  		// check value type
+  		// check opc ua value type
   		if (dataValue.variant()->variantType() != OpcUaBuildInType_OpcUaBoolean) {
 			Log(Error, "get value error, because value type invalid")
 				.parameter("NodeId", nodeId)
@@ -219,7 +220,7 @@ namespace TestProject
 			return BadInternalError;
   		}
 
-  		// get value
+  		// get value from opc ua value
   		dataValue.getValue(value);
 
 		return Success;
