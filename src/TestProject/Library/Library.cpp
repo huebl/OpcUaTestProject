@@ -49,6 +49,7 @@ namespace TestProject
 		// map namespace name to namespace index
 		if (!getNamespaceInfo("http://Server-Schnittstelle_1", serverNamespace_)) return false;
 
+		// set node ids
 		productionStartNodeId_.set((uint32_t)20, serverNamespace_);
 		partsAvailableNodeId_.set((uint32_t)293, serverNamespace_);
 		resultsAvailableNodeId_.set((uint32_t)285, serverNamespace_);
@@ -58,7 +59,7 @@ namespace TestProject
 		if (!readNodeReference(partsAvailableNodeId_, partsAvailableNode_)) return false;
 		if (!readNodeReference(resultsAvailableNodeId_, resultsAvailableNode_)) return false;
 
-		// set default values after information model during startup
+		// set default values after information model startup
 		if (!setValue(productionStartNodeId_, productionStartNode_, false)) return false;
 		if (!setValue(partsAvailableNodeId_, partsAvailableNode_, true)) return false;
 		if (!setValue(resultsAvailableNodeId_, resultsAvailableNode_, true)) return false;
