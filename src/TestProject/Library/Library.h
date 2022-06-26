@@ -21,6 +21,9 @@
 #include "OpcUaStackCore/BuildInTypes/OpcUaStatusCode.h"
 #include "OpcUaStackServer/Application/ApplicationIf.h"
 #include "OpcUaStackServer/AddressSpaceModel/BaseNodeClass.h"
+#include "OpcUaStackCore/BuildInTypes/OpcUaExtensionObject.h"
+
+#include "TestProject/CustomerDataTypes/PLCDataHandling.h"
 
 namespace TestProject
 {
@@ -42,11 +45,47 @@ namespace TestProject
 		std::string gitBranch(void) override;
 		//- ApplicationIf -----------------------------------------------------
 
+	  private:
+		uint32_t serverNamespaceIdx_ = 0;
+
+
+		// node ids
+		OpcUaStackCore::OpcUaNodeId productionStartNodeId_;
+
+		OpcUaStackCore::OpcUaNodeId plcDataHandlingNodeId_;
+		OpcUaStackCore::OpcUaNodeId partsAvailableNodeId1_;
+		OpcUaStackCore::OpcUaNodeId partsAvailableNodeId2_;
+		OpcUaStackCore::OpcUaNodeId partsAvailableNodeId3_;
+		OpcUaStackCore::OpcUaNodeId partsAvailableNodeId4_;
+		OpcUaStackCore::OpcUaNodeId partsAvailableNodeId5_;
+		OpcUaStackCore::OpcUaNodeId resultsAvailableNodeId1_;
+		OpcUaStackCore::OpcUaNodeId resultsAvailableNodeId2_;
+		OpcUaStackCore::OpcUaNodeId resultsAvailableNodeId3_;
+		OpcUaStackCore::OpcUaNodeId resultsAvailableNodeId4_;
+		OpcUaStackCore::OpcUaNodeId resultsAvailableNodeId5_;
+
+
+		// node references
+		OpcUaStackServer::BaseNodeClass::WPtr productionStartNode_;
+
+		OpcUaStackServer::BaseNodeClass::WPtr plcDataHandlingNode_;
+		OpcUaStackServer::BaseNodeClass::WPtr  partsAvailableNode1_;
+		OpcUaStackServer::BaseNodeClass::WPtr  partsAvailableNode2_;
+		OpcUaStackServer::BaseNodeClass::WPtr  partsAvailableNode3_;
+		OpcUaStackServer::BaseNodeClass::WPtr  partsAvailableNode4_;
+		OpcUaStackServer::BaseNodeClass::WPtr  partsAvailableNode5_;
+		OpcUaStackServer::BaseNodeClass::WPtr  resultsAvailableNode1_;
+		OpcUaStackServer::BaseNodeClass::WPtr  resultsAvailableNode2_;
+		OpcUaStackServer::BaseNodeClass::WPtr  resultsAvailableNode3_;
+		OpcUaStackServer::BaseNodeClass::WPtr  resultsAvailableNode4_;
+		OpcUaStackServer::BaseNodeClass::WPtr  resultsAvailableNode5_;
+
 		void writeCallbackProductionStart(
 			OpcUaStackCore::ApplicationWriteContext* applicationWriteContext
 		);
 
 
+		bool registerCustomerDataTypes(void);
 		bool getNamespaceInfo(
 			const std::string namespaceName,
 			uint32_t& namespaceIndex
@@ -61,6 +100,12 @@ namespace TestProject
 			OpcUaStackCore::OpcUaBoolean value,
 			OpcUaStackCore::OpcUaStatusCode statusCode = OpcUaStackCore::Success
 		);
+		bool setValue(
+			const OpcUaStackCore::OpcUaNodeId& nodeId,
+			OpcUaStackServer::BaseNodeClass::WPtr& baseNode,
+			OpcUaStackCore::OpcUaExtensionObject& value,
+			OpcUaStackCore::OpcUaStatusCode statusCode = OpcUaStackCore::Success
+		);
 		OpcUaStackCore::OpcUaStatusCode getValue(
 			const OpcUaStackCore::OpcUaNodeId& nodeId,
 			OpcUaStackServer::BaseNodeClass::WPtr& baseNode,
@@ -70,17 +115,6 @@ namespace TestProject
 			const OpcUaStackCore::OpcUaNodeId& nodeId,
 			WriteCallback writeCallback
 		);
-
-	  private:
-		uint32_t serverNamespace_ = 0;
-
-		OpcUaStackCore::OpcUaNodeId productionStartNodeId_;
-		OpcUaStackCore::OpcUaNodeId partsAvailableNodeId_;
-		OpcUaStackCore::OpcUaNodeId resultsAvailableNodeId_;
-
-		OpcUaStackServer::BaseNodeClass::WPtr productionStartNode_;
-		OpcUaStackServer::BaseNodeClass::WPtr  partsAvailableNode_;
-		OpcUaStackServer::BaseNodeClass::WPtr  resultsAvailableNode_;
 	};
 
 }

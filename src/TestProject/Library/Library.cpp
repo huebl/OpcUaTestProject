@@ -15,16 +15,21 @@
    Autor: Kai Huebl (kai@huebl-sgh.de)
  */
 
+
+#include <iostream>
+#include "BuildConfig.h"
+
 #include "OpcUaStackCore/Base/os.h"
 #include "OpcUaStackCore/Base/Log.h"
-#include "TestProject/Library/Library.h"
+
 #include "OpcUaStackServer/ServiceSetApplication/ApplicationService.h"
 #include "OpcUaStackServer/ServiceSetApplication/NodeReferenceApplication.h"
 #include "OpcUaStackServer/ServiceSetApplication/GetNamespaceInfo.h"
 #include "OpcUaStackServer/ServiceSetApplication/GetNodeReference.h"
 #include "OpcUaStackServer/ServiceSetApplication/RegisterForwardNode.h"
-#include <iostream>
-#include "BuildConfig.h"
+
+#include "TestProject/Library/Library.h"
+
 
 using namespace OpcUaStackCore;
 using namespace OpcUaStackServer;
@@ -46,25 +51,78 @@ namespace TestProject
 	{
 		Log(Debug, "Library::startup");
 
+		//
 		// map namespace name to namespace index
-		if (!getNamespaceInfo("http://Server-Schnittstelle_1", serverNamespace_)) return false;
+		//
+		if (!getNamespaceInfo("http://Server-Schnittstelle_1", serverNamespaceIdx_)) return false;
 
+		//
 		// set node ids
-		productionStartNodeId_.set((uint32_t)20, serverNamespace_);
-		partsAvailableNodeId_.set((uint32_t)293, serverNamespace_);
-		resultsAvailableNodeId_.set((uint32_t)285, serverNamespace_);
+		//
+		productionStartNodeId_.set((uint32_t)20, serverNamespaceIdx_);
+		plcDataHandlingNodeId_.set((uint32_t)284, serverNamespaceIdx_);
+		partsAvailableNodeId1_.set((uint32_t)293, serverNamespaceIdx_);
+		partsAvailableNodeId2_.set((uint32_t)294, serverNamespaceIdx_);
+		partsAvailableNodeId3_.set((uint32_t)295, serverNamespaceIdx_);
+		partsAvailableNodeId4_.set((uint32_t)296, serverNamespaceIdx_);
+		partsAvailableNodeId5_.set((uint32_t)297, serverNamespaceIdx_);
+		resultsAvailableNodeId1_.set((uint32_t)285, serverNamespaceIdx_);
+		resultsAvailableNodeId2_.set((uint32_t)286, serverNamespaceIdx_);
+		resultsAvailableNodeId3_.set((uint32_t)287, serverNamespaceIdx_);
+		resultsAvailableNodeId4_.set((uint32_t)288, serverNamespaceIdx_);
+		resultsAvailableNodeId5_.set((uint32_t)289, serverNamespaceIdx_);
 
+		//
+		// register customer data types
+		//
+		if (!registerCustomerDataTypes()) return false;
+
+		//
 		// get references to nodes in the opc ua information model
+		//
 		if (!readNodeReference(productionStartNodeId_, productionStartNode_)) return false;
-		if (!readNodeReference(partsAvailableNodeId_, partsAvailableNode_)) return false;
-		if (!readNodeReference(resultsAvailableNodeId_, resultsAvailableNode_)) return false;
+		if (!readNodeReference(plcDataHandlingNodeId_, plcDataHandlingNode_)) return false;
+		if (!readNodeReference(partsAvailableNodeId1_, partsAvailableNode1_)) return false;
+		if (!readNodeReference(partsAvailableNodeId2_, partsAvailableNode2_)) return false;
+		if (!readNodeReference(partsAvailableNodeId3_, partsAvailableNode3_)) return false;
+		if (!readNodeReference(partsAvailableNodeId4_, partsAvailableNode4_)) return false;
+		if (!readNodeReference(partsAvailableNodeId5_, partsAvailableNode5_)) return false;
+		if (!readNodeReference(resultsAvailableNodeId1_, resultsAvailableNode1_)) return false;
+		if (!readNodeReference(resultsAvailableNodeId2_, resultsAvailableNode2_)) return false;
+		if (!readNodeReference(resultsAvailableNodeId3_, resultsAvailableNode3_)) return false;
+		if (!readNodeReference(resultsAvailableNodeId4_, resultsAvailableNode4_)) return false;
+		if (!readNodeReference(resultsAvailableNodeId5_, resultsAvailableNode5_)) return false;
 
+		//
 		// set default values after information model startup
-		if (!setValue(productionStartNodeId_, productionStartNode_, false)) return false;
-		if (!setValue(partsAvailableNodeId_, partsAvailableNode_, true)) return false;
-		if (!setValue(resultsAvailableNodeId_, resultsAvailableNode_, true)) return false;
+		//
 
+		// set default PLCDataHandling
+		OpcUaExtensionObject plcDataHandlingEO;
+		auto plcDataHandling = plcDataHandlingEO.getObjectRef<PLCDataHandling>();
+		plcDataHandling->results_available_1() = false;
+		plcDataHandling->results_available_2() = false;
+		plcDataHandling->results_available_3() = false;
+		plcDataHandling->results_available_4() = false;
+		plcDataHandling->results_available_5() = false;
+
+		// set default values
+		if (!setValue(productionStartNodeId_, productionStartNode_, false)) return false;
+		if (!setValue(plcDataHandlingNodeId_, plcDataHandlingNode_, plcDataHandlingEO)) return false;
+		if (!setValue(partsAvailableNodeId1_, partsAvailableNode1_, false)) return false;
+		if (!setValue(partsAvailableNodeId2_, partsAvailableNode2_, false)) return false;
+		if (!setValue(partsAvailableNodeId3_, partsAvailableNode3_, false)) return false;
+		if (!setValue(partsAvailableNodeId4_, partsAvailableNode4_, false)) return false;
+		if (!setValue(partsAvailableNodeId5_, partsAvailableNode5_, false)) return false;
+		if (!setValue(resultsAvailableNodeId1_, resultsAvailableNode1_, false)) return false;
+		if (!setValue(resultsAvailableNodeId2_, resultsAvailableNode2_, false)) return false;
+		if (!setValue(resultsAvailableNodeId3_, resultsAvailableNode3_, false)) return false;
+		if (!setValue(resultsAvailableNodeId4_, resultsAvailableNode4_, false)) return false;
+		if (!setValue(resultsAvailableNodeId5_, resultsAvailableNode5_, false)) return false;
+
+		//
 		// register write callback function
+		//
 		if (!registerWriteCallback(productionStartNodeId_, std::bind(&Library::writeCallbackProductionStart, this, std::placeholders::_1))) return false;
 
 		return true;
@@ -105,16 +163,55 @@ namespace TestProject
 	{
 		OpcUaStatusCode statusCode;
 		OpcUaBoolean value;
+		OpcUaExtensionObject plcDataHandlingEO;
+		auto plcDataHandling = plcDataHandlingEO.getObjectRef<PLCDataHandling>();
 
-		// get a value
-		statusCode = getValue(partsAvailableNodeId_, partsAvailableNode_, value);
+		// get/set partsAvailable1 -> partsAvailable1
+		statusCode = getValue(partsAvailableNodeId1_, partsAvailableNode1_, value);
+		setValue(resultsAvailableNodeId1_, resultsAvailableNode1_, value, statusCode);
+		plcDataHandling->results_available_1() = value;
 
-		// set a value
-		setValue(resultsAvailableNodeId_, resultsAvailableNode_, value, statusCode);
+		// get/set partsAvailable2 -> partsAvailable2
+		statusCode = getValue(partsAvailableNodeId2_, partsAvailableNode2_, value);
+		setValue(resultsAvailableNodeId2_, resultsAvailableNode2_, value, statusCode);
+		plcDataHandling->results_available_2() = value;
 
+		// get/set partsAvailable3 -> partsAvailable3
+		statusCode = getValue(partsAvailableNodeId3_, partsAvailableNode3_, value);
+		setValue(resultsAvailableNodeId3_, resultsAvailableNode3_, value, statusCode);
+		plcDataHandling->results_available_3() = value;
+
+		// get/set partsAvailable4 -> partsAvailable4
+		statusCode = getValue(partsAvailableNodeId4_, partsAvailableNode4_, value);
+		setValue(resultsAvailableNodeId4_, resultsAvailableNode4_, value, statusCode);
+		plcDataHandling->results_available_4() = value;
+
+		// get/set partsAvailable5 -> partsAvailable5
+		statusCode = getValue(partsAvailableNodeId5_, partsAvailableNode5_, value);
+		setValue(resultsAvailableNodeId5_, resultsAvailableNode5_, value, statusCode);
+		plcDataHandling->results_available_5() = value;
+
+
+		// set PLCDataHandling value
+		setValue(plcDataHandlingNodeId_, plcDataHandlingNode_, plcDataHandlingEO);
 
 		// set production call value
 		applicationWriteContext->dataValue_.set((OpcUaBoolean)false);
+	}
+
+	bool
+	Library::registerCustomerDataTypes(void)
+	{
+		OpcUaExtensionObject eo;
+
+		// register data type PLCDataHandling
+		if (!eo.registerFactoryObject<PLCDataHandling>()) {
+			Log(Error, "register data type error")
+				.parameter("DataType", "PLCDataHandling");
+			return false;
+		}
+
+		return true;
 	}
 
 	bool
@@ -193,6 +290,30 @@ namespace TestProject
   			baseNodeClass->setValueSync(OpcUaDataValue(OpcUaNullValue(), statusCode));
   		}
 
+		return true;
+	}
+
+	bool
+	Library::setValue(
+		const OpcUaNodeId& nodeId,
+		BaseNodeClass::WPtr& baseNode,
+		OpcUaExtensionObject& value,
+		OpcUaStatusCode statusCode
+	)
+	{
+  		auto baseNodeClass = baseNode.lock();
+  		if (baseNodeClass.get() == nullptr) {
+			Log(Error, "set value error, because node no longer exist in opc ua information model")
+				.parameter("NodeId", nodeId);
+  			return false;
+  		}
+
+  		if (statusCode == Success) {
+  			baseNodeClass->setValueSync(OpcUaDataValue(value, statusCode));
+  		}
+  		else {
+  			baseNodeClass->setValueSync(OpcUaDataValue(OpcUaNullValue(), statusCode));
+  		}
 		return true;
 	}
 
