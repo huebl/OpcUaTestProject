@@ -16,3 +16,4 @@ build_src
 build_tst
 build_package
 build_local
+build_local_x86_vs_Debug
