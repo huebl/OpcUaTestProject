@@ -46,7 +46,6 @@ namespace TestProject
 			OpcUaStackCore::ApplicationWriteContext* applicationWriteContext
 		);
 
-
 		bool getNamespaceInfo(
 			const std::string namespaceName,
 			uint32_t& namespaceIndex
@@ -74,6 +73,9 @@ namespace TestProject
 	  private:
 		uint32_t serverNamespace_ = 0;
 
+		OpcUaStackCore::IOThread::SPtr ioThread_;
+		OpcUaStackCore::SlotTimerElement::SPtr slotTimerElement_;
+
 		OpcUaStackCore::OpcUaNodeId productionStartNodeId_;
 		OpcUaStackCore::OpcUaNodeId partsAvailableNodeId_;
 		OpcUaStackCore::OpcUaNodeId resultsAvailableNodeId_;
@@ -81,6 +83,9 @@ namespace TestProject
 		OpcUaStackServer::BaseNodeClass::WPtr productionStartNode_;
 		OpcUaStackServer::BaseNodeClass::WPtr  partsAvailableNode_;
 		OpcUaStackServer::BaseNodeClass::WPtr  resultsAvailableNode_;
+
+		OpcUaStackCore::OpcUaStatusCode statusCode_ = OpcUaStackCore::OpcUaStatusCode::Success;
+		OpcUaStackCore::OpcUaBoolean value_ = true;
 	};
 
 }

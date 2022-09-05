@@ -46,6 +46,9 @@ namespace TestProject
 	{
 		Log(Debug, "Library::startup");
 
+		ioThread_ = this->applicationThreadPool();
+		slotTimerElement_ = boost::make_shared<SlotTimerElement>();
+
 		// map namespace name to namespace index
 		if (!getNamespaceInfo("http://Server-Schnittstelle_1", serverNamespace_)) return false;
 
@@ -103,18 +106,21 @@ namespace TestProject
 		ApplicationWriteContext* applicationWriteContext
 	)
 	{
-		OpcUaStatusCode statusCode;
-		OpcUaBoolean value;
-
 		// get a value
-		statusCode = getValue(partsAvailableNodeId_, partsAvailableNode_, value);
-
-		// set a value
-		setValue(resultsAvailableNodeId_, resultsAvailableNode_, value, statusCode);
-
+		statusCode_ = getValue(partsAvailableNodeId_, partsAvailableNode_, value_);
 
 		// set production call value
 		applicationWriteContext->dataValue_.set((OpcUaBoolean)false);
+
+		// start timer
+		slotTimerElement_->timeoutCallback(
+			[this](void) {
+				// set a value
+				setValue(resultsAvailableNodeId_, resultsAvailableNode_, value_, statusCode_);
+			}
+		);
+		slotTimerElement_->expireTime(boost::posix_time::microsec_clock::local_time()+boost::posix_time::millisec(1000));
+		ioThread_->slotTimer()->start(slotTimerElement_);
 	}
 
 	bool
